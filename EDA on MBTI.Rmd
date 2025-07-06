@@ -1,0 +1,233 @@
+---
+title: "Data Wrangling Project"
+author: "Lakshmi Priyadarshni Krishnamurthy"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    self_contained: yes
+    mode: selfcontained
+---
+
+## Introduction
+
+
+For my data analysis project, I chose to analyze personality data. I’m interested in the field of psychology and wanted to work on psychological data. I also love personality tests and love predicting people’s personalities. This project was something that tied both my areas of interest- people and data.
+
+### Primary Questions
+
+I looked at the relationship between various demographic variables and whether they are correlated to a person’s MBTI personality type. There are 16 personality types that are formed by a combination of 4 factors.
+
+* *Introversion (I) vs Extroversion (E)*
+* *Intuitive (N) vs Sensing (S)*
+* *Thinking (T) vs Feeling (F)*
+* *Judging (J) vs Prospecting (P)*
+
+**The 16 personality types include:**
+
+* INTJ (Architect)
+* INTP (Logician)
+* ENTJ (Commander)
+* ENTP (Debater)
+* INFJ (Advocate)
+* INFP (Mediator)
+* ENFJ (Protagonist)
+* ENFP (Campaigner)
+* ISTJ (Logistician)
+* ISFJ (Defender)
+* ESTJ (Executive)
+* ESFJ (Consul)
+* ISTP (Virtuoso)
+* ISFP (Adventurer)
+* ESTP (Entrepreneur)
+* ESFP (Entertainer)
+
+I also individually analyzed each component of the personality type to look at any individual trends.
+
+Some of the questions I looked at were as follows:
+
+1. What is the relationship between *Age, Gender, and Education* and *Personality traits*?
+<br>
+2. Are there personality types that are more common than the others?
+<br>
+3. How are different personality traits (Introversion, Thinking etc.) split across populations.
+
+
+## Data
+
+The data that I am using for this project can be accessed from [Kaggle](https://www.kaggle.com/datasets/stealthtechnologies/predict-people-personality-types/data) 
+
+```{r}
+#loading in the data file
+personality <- read.csv("./personality.csv")
+```
+
+```{r}
+#Viewing the structure of the dataset to see if I need to change any datatypes or clean my data
+str(personality)
+```
+
+
+To start off, I'm looking at the most to least common personality types based on the data collected.
+
+
+```{r}
+#Most popular Personality Types
+library(ggplot2)
+library(tidyverse)
+ggplot(personality, aes(x = fct_infreq(Personality))) +
+  geom_bar(fill = "salmon") +
+  labs(x = "MBTI type", y = "Frequency", title = "Personality Types Ordered by Frequency") +
+  theme_minimal()
+```
+
+This shows that ENFP, ENTP, and INFP are the most common personality types, while ESTJ, ISFJ, and ISTJ are the rarest personality types.
+
+<br>
+
+
+Next, I plotted the histograms of each trait to see how these traits are distributed within the population. 
+
+```{r}
+#plotting individual elements
+ggplot(personality, aes(x=Introversion.Score)) +
+  geom_histogram(fill = "salmon") +
+   labs(x = "Introvert-Extrovert Scale", y = "Frequency", title = "Introversion-Extroversion Spectrum") + #higher score means extroversion
+  theme_minimal()
+
+ggplot(personality, aes(x=Sensing.Score)) +
+  geom_histogram(fill = "salmon") +
+   labs(x = "Intuitive-Sensing Scale", y = "Frequency", title = "Intuitive-Sensing Spectrum") + #higher score means Sensing
+  theme_minimal()
+
+ggplot(personality, aes(x=Thinking.Score)) +
+  geom_histogram(fill = "salmon") +
+  labs(x = "Thinking-Feeling Scale", y = "Frequency", title = "Thinking-Feeling Spectrum") + #higher score means Thinking
+  theme_minimal()
+
+ggplot(personality, aes(x=Judging.Score)) +
+  geom_histogram(fill = "salmon") +
+  labs(x = "Prospecting-Judging Scale", y = "Frequency", title = "Prospecting-Judging Spectrum") + #higher score means Judging
+  theme_minimal()
+```
+
+These visualizations provided interesting insights.
+
+The spectrum of social orientation (Introverts vs Extroverts) and the Decision making orientations (Thinkers vs Feelers) spectrum were uniformly distributed. This means that people are equally likely to be a mix of both as they are to be on the extreme ends on either sides.
+
+However, when we look at Perception (Intuitive vs Sensing) and Working styles (Judging vs Prospecting), the data is normally distributed. This means that people are more likely to have a mix of characteristics for both traits.
+<br>
+
+## Interests and Personality Traits
+
+Next I'm looking at the correlation between Interests and Personality Types using chi square test
+
+Null Hypothesis: H0: There is no relationship between the interests and personality types.
+<br>
+Alternative Hypothesis Ha: There is a relationship between the interests and personality types.
+
+
+```{r}
+# Creating a contingency table to analyze the dataset
+contingency_table <- table(personality$Interest, personality$Personality)
+
+# Performing the chi-square test using chisq.test() function
+chi_square_result <- chisq.test(contingency_table)
+
+chi_square_result
+
+```
+
+The result shows an extremely low p value (p-value < 2.2e-16), which indicates that there is strong evidence to reject our null hypothesis and accept the alternate hypothesis, i.e., Interests do have a relationship with the personality types. 
+
+```{r}
+residuals <- chi_square_result$stdres
+residuals
+
+```
+
+```{r}
+# Creating a heatmap of residuals to visualize where relationships are strongest
+ggplot(as.data.frame(residuals), aes(Var1, Var2, fill = Freq)) + 
+  geom_tile() + 
+  scale_fill_gradient2(low = "darkblue", high = "darkred", mid = "white", midpoint = 0) +
+  labs(x = "Interest", y = "Personality Type", fill = "Residuals") +
+  theme_minimal()
+
+```
+
+I found this insight interesting because there are certain personalities that are more likely to be interested in sports and arts than the others.
+
+Specifically, ENFJs (Protagonists), INFJs (Advocates), and ENTJs (Commanders) are more interested in sports (any type of sports) than the other personality types.
+
+What's interesting is the top 3 have something in common. 
+
+All 3 have people have _N_J types (i.e., Intuition (N) and Judging (J) preferences) in their MBTI. 
+
+These personalities share certain common characteristics like big-picture Thinking. Due to their high intuition, they focus on possibilities and abstract concepts rather than immediate details. They tend to be visionary and imaginative, and look for patterns and connections. 
+
+Their Judging (J) orientation indicates that they like to plan, organize, and approach tasks with a clear structure.
+
+People with _N_J types are strategic and are good at planning, goal-setting, and executing long-term visions, which can be advantageous in any type of sport that requires foresight and organization.
+
+## Gender and Personality Types
+
+As a next step, I looked at gender and personality types to see if there is a relationship. 
+
+Null Hypothesis: H0: There is no relationship between the gender and personality types.
+<br>
+Alternative Hypothesis Ha: There is a relationship between the gender and personality types.
+
+```{r}
+#looking at gender and personality types
+contingency_table_2 <- table(personality$Gender, personality$Personality)
+
+# Performing the chi-square test using chisq.test() function
+chi_square_result_2 <- chisq.test(contingency_table_2)
+
+chi_square_result_2
+
+residuals_2 <- chi_square_result_2$stdres
+residuals_2
+
+```
+The result shows an extremely low p value (p-value < 2.2e-16), which indicates that there is strong evidence to reject our null hypothesis and accept the alternate hypothesis, i.e., Gender does have a relationship with the personality types. 
+
+
+```{r}
+# Plotting Personality Type by Gender
+ggplot(personality, aes(x = Personality, fill = Gender)) + 
+  geom_bar(position = "dodge") + 
+  labs(x = "Personality Type", y = "Number of People", fill = "Gender", 
+       title = "Personality Types by Gender") + 
+  scale_fill_manual(values = c("Male" = "lightblue", "Female" = "salmon")) +
+  theme_minimal() + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+
+There are some types that have a unique spread among males and females, whereas some personality types have a clear spread.
+
+Example- ENTPs (Debators) are more likely to be females, while INFPs (Mediators) are more likely to be males.
+
+For the remaining personality types, there seems to be a small difference or an almost equal split in terms of gender.
+<br>
+
+## Demographic Variables and Personality Traits
+
+After looking at overall personality types and their relationships with gender and interests, I also looked at the correlation between 3 demographic variables (age, education, gender) with the individual traits (I-E, S-N, F-T, P-J). 
+
+```{r}
+#using ifelse to add 0 and 1 values to each row where 0 indicates male and 1 indicates a female
+unique(personality$Gender)
+personality$Gender <- ifelse(personality$Gender == "Female", 1, 0)
+cor(personality[ , 1:3], personality[ , 4:7])
+```
+
+Based on this analysis, there is no significant correlation between the demographic variables (age, gender, education) and individual personality traits.
+<br>
+
+## Conclusion
+
+This analysis looked at the trends within different personality types and their relationships with demographic variables. Through my analysis, I was able to identify the most common personality types, look at the spread within personality types, and identify relationships between demographic factors, interests and the personality types. 
+<br>
